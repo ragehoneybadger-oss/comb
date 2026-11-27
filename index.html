@@ -932,6 +932,18 @@
 
         <div class="flex items-center gap-2 sm:gap-3">
           <button
+            id="pfHeaderResetBtn"
+            type="button"
+            title="Reset Image & Settings"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 rounded-full border-0 transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Reset</span>
+          </button>
+
+          <button
             id="pfNewUploadBtn"
             type="button"
             class="hidden items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200/80 rounded-full border-0 transition cursor-pointer"
@@ -959,7 +971,7 @@
 
     <!-- Hidden File Input for Tab 2 -->
     <input
-      id="pfFileInput"
+      id="fileInput"
       type="file"
       accept="image/png,image/jpeg,image/webp"
       class="hidden"
@@ -979,7 +991,7 @@
           >
             <!-- Empty State Upload Prompt -->
             <div
-              id="pfEmptyState"
+              id="emptyState"
               class="max-w-md w-full bg-white/95 backdrop-blur-sm rounded-3xl p-7 sm:p-9 text-center shadow-lg border border-slate-200/80 cursor-pointer hover:border-pinterest/50 transition"
             >
               <div class="w-14 h-14 mx-auto rounded-2xl bg-pinterest-light text-pinterest flex items-center justify-center mb-4">
@@ -992,9 +1004,13 @@
                 Drag &amp; drop your photo here, or click to browse. We'll add clean white padding on the top &amp; bottom—zero cropping.
               </p>
               <div class="mt-5">
-                <span class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pinterest text-white text-sm font-semibold shadow-sm hover:bg-pinterest-hover transition">
+                <button
+                  id="chooseImageBtn"
+                  type="button"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-0 bg-pinterest text-white text-sm font-semibold shadow-sm hover:bg-pinterest-hover transition cursor-pointer"
+                >
                   Choose Image
-                </span>
+                </button>
               </div>
               <p class="text-xs text-slate-400 mt-4">Supports PNG, JPG, and WEBP</p>
             </div>
@@ -1018,10 +1034,10 @@
 
             <!-- Drag Overlay -->
             <div
-              id="pfDragOverlay"
+              id="dragOverlay"
               class="hidden absolute inset-0 bg-pinterest/10 backdrop-blur-[2px] border-4 border-pinterest rounded-3xl items-center justify-center pointer-events-none z-20"
             >
-              <div class="bg-white px-6 py-4 rounded-2xl shadow-xl text-center">
+              <div class="bg-white px-6 py-4 rounded-2xl shadow-xl text-center pointer-events-none">
                 <p class="text-base font-bold text-pinterest">Drop your image to frame it</p>
                 <p class="text-xs text-slate-500 mt-0.5">100% of your photo stays intact</p>
               </div>
@@ -1172,15 +1188,16 @@
                   id="pfFormatSelect"
                   class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-pinterest"
                 >
-                  <option value="image/png">PNG (Lossless)</option>
-                  <option value="image/jpeg">JPG (High Quality 95%)</option>
+                  <option value="image/png">PNG</option>
+                  <option value="image/jpeg">JPG</option>
+                  <option value="image/webp">WEBP</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <!-- Primary Download CTA -->
-          <div class="pt-1">
+          <!-- Primary Download CTA & Reset Option -->
+          <div class="pt-1 flex flex-col gap-2.5">
             <button
               id="pfMainDownloadBtn"
               type="button"
@@ -1191,6 +1208,17 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               <span id="pfDownloadBtnText">Upload an Image First</span>
+            </button>
+
+            <button
+              id="pfPanelResetBtn"
+              type="button"
+              class="w-full py-2.5 px-4 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Reset All Settings &amp; Image</span>
             </button>
           </div>
 
@@ -1876,366 +1904,304 @@
        ===================================================================== -->
   <script>
     (function () {
-      // Application State (Default aspectRatio changed to '1:1')
-      const state = {
-        image: null,
-        fileName: 'pinterest-pin',
-        aspectRatio: '1:1', // Default 1:1 Square
+      const DEFAULTS = {
+        aspectRatio: '1:1',
         fitMode: 'contain', // 'contain' or 'match-width'
-        insetPercent: 0, // 0 to 20% extra breathing room
+        insetPercent: 0,
         padColor: '#FFFFFF',
-        resolutionMode: 'pinterest-1000', // 'pinterest-1000', 'pinterest-2000', 'original'
+        resolutionMode: 'pinterest-1000',
         format: 'image/png',
       };
+      const state = { image: null, fileName: 'pinterest-pin', ...DEFAULTS };
 
-      // Scoped DOM References
-      const fileInput = document.getElementById('pfFileInput');
-      const dropZone = document.getElementById('pfDropZone');
-      const emptyState = document.getElementById('pfEmptyState');
-      const previewWrapper = document.getElementById('pfPreviewWrapper');
-      const dragOverlay = document.getElementById('pfDragOverlay');
-      const previewCanvas = document.getElementById('pfPreviewCanvas');
+      // DOM references
+      const $ = (id) => document.getElementById(id);
+      const fileInput = $('fileInput');
+      const chooseImageBtn = $('chooseImageBtn');
+      const dropZone = $('pfDropZone');
+      const emptyState = $('emptyState');
+      const previewWrapper = $('pfPreviewWrapper');
+      const dragOverlay = $('dragOverlay');
+      const previewCanvas = $('pfPreviewCanvas');
       const ctx = previewCanvas.getContext('2d');
-
-      const newUploadBtn = document.getElementById('pfNewUploadBtn');
-      const headerDownloadBtn = document.getElementById('pfHeaderDownloadBtn');
-      const mainDownloadBtn = document.getElementById('pfMainDownloadBtn');
-      const downloadBtnText = document.getElementById('pfDownloadBtnText');
-
-      const badgeRatio = document.getElementById('pfBadgeRatio');
-      const badgeDimensions = document.getElementById('pfBadgeDimensions');
-      const badgePaddingInfo = document.getElementById('pfBadgePaddingInfo');
-
+      const newUploadBtn = $('pfNewUploadBtn');
+      const headerDownloadBtn = $('pfHeaderDownloadBtn');
+      const mainDownloadBtn = $('pfMainDownloadBtn');
+      const downloadBtnText = $('pfDownloadBtnText');
+      const headerResetBtn = $('pfHeaderResetBtn');
+      const panelResetBtn = $('pfPanelResetBtn');
+      const fitHelpText = $('pfFitHelpText');
+      const insetSlider = $('pfInsetSlider');
+      const insetValueLabel = $('pfInsetValueLabel');
+      const customColorInput = $('pfCustomColorInput');
+      const resolutionSelect = $('pfResolutionSelect');
+      const formatSelect = $('pfFormatSelect');
+      const badgeRatio = $('pfBadgeRatio');
+      const badgeDimensions = $('pfBadgeDimensions');
+      const badgePaddingInfo = $('pfBadgePaddingInfo');
       const ratioBtns = document.querySelectorAll('.pf-ratio-btn');
       const fitBtns = document.querySelectorAll('.pf-fit-btn');
-      const fitHelpText = document.getElementById('pfFitHelpText');
-      const insetSlider = document.getElementById('pfInsetSlider');
-      const insetValueLabel = document.getElementById('pfInsetValueLabel');
       const colorPresets = document.querySelectorAll('.pf-color-preset');
-      const customColorInput = document.getElementById('pfCustomColorInput');
-      const resolutionSelect = document.getElementById('pfResolutionSelect');
-      const formatSelect = document.getElementById('pfFormatSelect');
 
-      // Show non-blocking notification via shared toast
-      function showPfToast(message) {
-        showSharedToast(message, false);
+      function toast(msg) {
+        if (typeof showSharedToast === 'function') showSharedToast(msg, false);
       }
 
-      // Compute output canvas dimensions and image placement rectangle
-      function calculateLayout(imgW, imgH) {
-        const targetRatio = state.aspectRatio === '1:1' ? 1 : 2 / 3;
-
-        // Determine base canvas width
-        let canvasW = 1000;
-        if (state.resolutionMode === 'pinterest-2000') {
-          canvasW = 2000;
-        } else if (state.resolutionMode === 'original') {
-          canvasW = Math.max(imgW, 100);
-        }
-
-        let canvasH = Math.round(canvasW / targetRatio);
-
-        // Apply optional outer margin inset
-        const marginScale = 1 - (state.insetPercent / 100) * 2;
-        const innerMaxW = canvasW * marginScale;
-        const innerMaxH = canvasH * marginScale;
-
-        let drawW, drawH;
-        let padType = 'Top & Bottom Padded';
-
-        if (state.fitMode === 'match-width') {
-          const scaleByWidth = innerMaxW / imgW;
-          if (imgH * scaleByWidth <= innerMaxH) {
-            drawW = innerMaxW;
-            drawH = imgH * scaleByWidth;
-            padType = drawH < canvasH ? 'Top & Bottom Padded' : 'Full Frame';
-          } else {
-            const scaleByHeight = innerMaxH / imgH;
-            drawH = innerMaxH;
-            drawW = imgW * scaleByHeight;
-            padType = 'Left & Right Padded (Tall Image)';
-          }
-        } else {
-          // 'contain': Fit 100% of image inside target aspect ratio without cropping
-          const scale = Math.min(innerMaxW / imgW, innerMaxH / imgH);
-          drawW = imgW * scale;
-          drawH = imgH * scale;
-
-          const verticalPad = canvasH - drawH;
-          const horizontalPad = canvasW - drawW;
-          if (verticalPad > horizontalPad + 2) {
-            padType = 'Top & Bottom Padded';
-          } else if (horizontalPad > verticalPad + 2) {
-            padType = 'Left & Right Padded';
-          } else {
-            padType = state.insetPercent > 0 ? 'Evenly Framed' : 'Exact Fit';
-          }
-        }
-
-        const offsetX = (canvasW - drawW) / 2;
-        const offsetY = (canvasH - drawH) / 2;
-
-        return {
-          canvasW: Math.round(canvasW),
-          canvasH: Math.round(canvasH),
-          drawW,
-          drawH,
-          offsetX,
-          offsetY,
-          padType,
-        };
+      // ---------- Upload ----------
+      function openFileDialog(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
       }
 
-      // Render image onto the canvas with white (or custom) padding
-      function renderCanvas() {
-        if (!state.image) return;
+      chooseImageBtn.addEventListener('click', openFileDialog);
+      emptyState.addEventListener('click', openFileDialog);
+      newUploadBtn.addEventListener('click', openFileDialog);
 
-        try {
-          const layout = calculateLayout(state.image.naturalWidth, state.image.naturalHeight);
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (file) handleImageFile(file);
+        fileInput.value = ''; // allows choosing the same file again
+      });
 
-          previewCanvas.width = layout.canvasW;
-          previewCanvas.height = layout.canvasH;
-
-          // Fill entire canvas with background padding color
-          ctx.fillStyle = state.padColor;
-          ctx.fillRect(0, 0, layout.canvasW, layout.canvasH);
-
-          // Enable high-quality image smoothing
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-
-          // Draw original image centered without cropping
-          ctx.drawImage(
-            state.image,
-            layout.offsetX,
-            layout.offsetY,
-            layout.drawW,
-            layout.drawH
-          );
-
-          // Update UI metadata badges
-          badgeRatio.textContent = state.aspectRatio === '1:1' ? '1:1 Square' : '2:3 Pinterest';
-          badgeDimensions.textContent = `${layout.canvasW} × ${layout.canvasH} px`;
-          badgePaddingInfo.textContent = layout.padType;
-
-          const extLabel = state.format === 'image/png' ? 'PNG' : 'JPG';
-          downloadBtnText.textContent = `Download ${state.aspectRatio} ${extLabel} (${layout.canvasW}×${layout.canvasH})`;
-        } catch (err) {
-          console.error('Canvas render error:', err);
-          showPfToast('Could not render image. Please try another file.');
-        }
-      }
-
-      // Load image file from File object
       function handleImageFile(file) {
-        if (!file) return;
-        const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-          showPfToast('Please upload a PNG, JPG, or WEBP image.');
+        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+          toast('Please choose a PNG, JPG or WEBP image');
           return;
         }
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          state.image = img;
+          state.fileName = file.name.replace(/\.[^.]+$/, '') || 'pinterest-pin';
 
-        const reader = new FileReader();
-        reader.onload = function (event) {
-          const img = new Image();
-          img.onload = function () {
-            state.image = img;
-            const baseName = file.name.replace(/\.[^/.]+$/, '') || 'pinterest-pin';
-            state.fileName = baseName;
+          emptyState.classList.add('hidden');
+          previewWrapper.classList.remove('hidden');
+          previewWrapper.classList.add('flex');
+          newUploadBtn.classList.remove('hidden');
+          newUploadBtn.classList.add('inline-flex');
+          headerDownloadBtn.disabled = false;
+          mainDownloadBtn.disabled = false;
+          downloadBtnText.textContent = 'Download Pin';
 
-            // Reveal preview & enable buttons
-            emptyState.classList.add('hidden');
-            previewWrapper.classList.remove('hidden');
-            previewWrapper.classList.add('flex');
-
-            newUploadBtn.classList.remove('hidden');
-            newUploadBtn.classList.add('inline-flex');
-            headerDownloadBtn.disabled = false;
-            mainDownloadBtn.disabled = false;
-
-            renderCanvas();
-            showPfToast(`Loaded "${file.name}" (${img.naturalWidth}×${img.naturalHeight}px)`);
-          };
-          img.onerror = function () {
-            showPfToast('Failed to decode image file.');
-          };
-          img.src = event.target.result;
+          renderCanvas();
         };
-        reader.readAsDataURL(file);
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          toast('Could not read that image');
+        };
+        img.src = url;
       }
 
-      // Trigger high-resolution download
+      // ---------- Drag & drop ----------
+      let dragDepth = 0;
+
+      function showOverlay(show) {
+        dragOverlay.classList.toggle('hidden', !show);
+        dragOverlay.classList.toggle('flex', show);
+      }
+
+      dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragDepth++;
+        showOverlay(true);
+      });
+      dropZone.addEventListener('dragover', (e) => e.preventDefault());
+      dropZone.addEventListener('dragleave', () => {
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0) showOverlay(false);
+      });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragDepth = 0;
+        showOverlay(false);
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) handleImageFile(file);
+      });
+
+      // ---------- Rendering ----------
+      function renderCanvas() {
+        const img = state.image;
+        const isSquare = state.aspectRatio === '1:1';
+
+        let width = 1000;
+        if (state.resolutionMode === 'pinterest-2000') width = 2000;
+        if (state.resolutionMode === 'original' && img) {
+          width = Math.min(img.naturalWidth, 6000); // cap to protect browser memory
+        }
+        const height = isSquare ? width : Math.round(width * 1.5);
+
+        badgeRatio.textContent = isSquare ? '1:1 Square' : '2:3 Standard';
+        badgeDimensions.textContent = `${width} × ${height} px`;
+
+        if (!img) return;
+
+        previewCanvas.width = width;
+        previewCanvas.height = height;
+        ctx.fillStyle = state.padColor;
+        ctx.fillRect(0, 0, width, height);
+
+        const inset = state.insetPercent / 100;
+        // "Top & Bottom Only" keeps the sides edge-to-edge, so inset applies vertically only
+        const maxW = state.fitMode === 'match-width' ? width : width * (1 - 2 * inset);
+        const maxH = height * (1 - 2 * inset);
+        const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+        const drawW = img.naturalWidth * scale;
+        const drawH = img.naturalHeight * scale;
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, (width - drawW) / 2, (height - drawH) / 2, drawW, drawH);
+
+        const padX = width - drawW > 1;
+        const padY = height - drawH > 1;
+        badgePaddingInfo.textContent =
+          padX && padY ? 'All Sides Padded' :
+          padY ? 'Top & Bottom Padded' :
+          padX ? 'Sides Padded' : 'No Padding Needed';
+      }
+
+      // ---------- Download ----------
       function downloadPaddedImage() {
         if (!state.image) return;
-
-        try {
-          renderCanvas();
-
-          const mimeType = state.format;
-          const extension = mimeType === 'image/png' ? 'png' : 'jpg';
-          const quality = mimeType === 'image/jpeg' ? 0.95 : undefined;
-          const ratioTag = state.aspectRatio.replace(':', 'x');
-
-          previewCanvas.toBlob(
-            function (blob) {
-              if (!blob) {
-                showPfToast('Export failed. Please try again.');
-                return;
-              }
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement('a');
-              link.href = url;
-              link.download = `${state.fileName}-${ratioTag}-padded.${extension}`;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              setTimeout(() => URL.revokeObjectURL(url), 1000);
-              showPfToast(`Downloaded ${link.download}`);
-            },
-            mimeType,
-            quality
-          );
-        } catch (err) {
-          console.error('Download error:', err);
-          showPfToast('Unable to export image.');
-        }
+        renderCanvas();
+        previewCanvas.toBlob((blob) => {
+          if (!blob) {
+            toast('Export failed. Try a smaller resolution');
+            return;
+          }
+          const ext = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }[blob.type] || 'png';
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${state.fileName}_${state.aspectRatio.replace(':', 'x')}.${ext}`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }, state.format, 0.95);
       }
 
-      // Event Listeners: Upload & Drag-and-Drop
-      emptyState.addEventListener('click', () => fileInput.click());
-      newUploadBtn.addEventListener('click', () => fileInput.click());
+      // ---------- UI sync helpers ----------
+      function updateRatioButtonsUI(ratio) {
+        ratioBtns.forEach((btn) => {
+          const active = btn.dataset.ratio === ratio;
+          btn.classList.toggle('border-pinterest', active);
+          btn.classList.toggle('bg-pinterest-light/50', active);
+          btn.classList.toggle('border-slate-200', !active);
+          btn.classList.toggle('hover:border-slate-300', !active);
+          btn.classList.toggle('bg-white', !active);
 
-      fileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-          handleImageFile(e.target.files[0]);
-          fileInput.value = '';
-        }
-      });
+          const icon = btn.querySelector('.pf-ratio-icon');
+          icon.classList.toggle('border-pinterest', active);
+          icon.classList.toggle('border-slate-400', !active);
+          icon.classList.toggle('group-hover:border-slate-600', !active);
 
-      ['dragenter', 'dragover'].forEach((evtName) => {
-        dropZone.addEventListener(evtName, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          dragOverlay.classList.remove('hidden');
-          dragOverlay.classList.add('flex');
+          const inner = btn.querySelector('.pf-ratio-inner');
+          inner.classList.toggle('bg-pinterest/20', active);
+          inner.classList.toggle('bg-slate-200', !active);
         });
-      });
+      }
 
-      ['dragleave', 'drop'].forEach((evtName) => {
-        dropZone.addEventListener(evtName, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          dragOverlay.classList.add('hidden');
-          dragOverlay.classList.remove('flex');
+      function updateFitButtonsUI(fit) {
+        fitBtns.forEach((b) => {
+          const active = b.dataset.fit === fit;
+          b.classList.toggle('bg-white', active);
+          b.classList.toggle('text-slate-900', active);
+          b.classList.toggle('shadow-xs', active);
+          b.classList.toggle('bg-transparent', !active);
+          b.classList.toggle('text-slate-600', !active);
         });
-      });
+        fitHelpText.textContent = fit === 'match-width'
+          ? 'Spans your image edge-to-edge horizontally and places padding only at the top & bottom (scales down only if too tall for the frame).'
+          : 'Fits 100% of your image inside the target frame, adding padding on top & bottom (or sides if image is extra tall).';
+      }
 
-      dropZone.addEventListener('drop', (e) => {
-        const files = e.dataTransfer && e.dataTransfer.files;
-        if (files && files[0]) {
-          handleImageFile(files[0]);
-        }
-      });
-
-      // Aspect Ratio Toggle Buttons (Updates outer card & inner preview icon highlight cleanly)
-      ratioBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          state.aspectRatio = btn.dataset.ratio;
-
-          ratioBtns.forEach((b) => {
-            const active = b.dataset.ratio === state.aspectRatio;
-            b.classList.toggle('border-pinterest', active);
-            b.classList.toggle('bg-pinterest-light/50', active);
-            b.classList.toggle('border-slate-200', !active);
-            b.classList.toggle('bg-white', !active);
-
-            const iconBox = b.querySelector('.pf-ratio-icon');
-            const iconInner = b.querySelector('.pf-ratio-inner');
-            if (iconBox && iconInner) {
-              iconBox.classList.toggle('border-pinterest', active);
-              iconBox.classList.toggle('border-slate-400', !active);
-              iconInner.classList.toggle('bg-pinterest/20', active);
-              iconInner.classList.toggle('bg-slate-200', !active);
-            }
-          });
-
-          renderCanvas();
+      function updateActiveColorSwatch(hex) {
+        colorPresets.forEach((btn) => {
+          const match = btn.dataset.color.toUpperCase() === hex.toUpperCase();
+          btn.classList.toggle('border-2', match);
+          btn.classList.toggle('border-pinterest', match);
+          btn.classList.toggle('border', !match);
+          btn.classList.toggle('border-slate-300', !match);
         });
-      });
+      }
 
-      // Fit Mode Toggle Buttons
-      fitBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          state.fitMode = btn.dataset.fit;
+      // ---------- Controls ----------
+      ratioBtns.forEach((btn) => btn.addEventListener('click', () => {
+        state.aspectRatio = btn.dataset.ratio;
+        updateRatioButtonsUI(state.aspectRatio);
+        renderCanvas();
+      }));
 
-          fitBtns.forEach((b) => {
-            const active = b.dataset.fit === state.fitMode;
-            b.classList.toggle('bg-white', active);
-            b.classList.toggle('text-slate-900', active);
-            b.classList.toggle('shadow-xs', active);
-            b.classList.toggle('bg-transparent', !active);
-            b.classList.toggle('text-slate-600', !active);
-          });
+      fitBtns.forEach((btn) => btn.addEventListener('click', () => {
+        state.fitMode = btn.dataset.fit;
+        updateFitButtonsUI(state.fitMode);
+        renderCanvas();
+      }));
 
-          if (state.fitMode === 'match-width') {
-            fitHelpText.textContent =
-              'Spans your image edge-to-edge horizontally and places white padding strictly at the top & bottom (scales down only if taller than target ratio).';
-          } else {
-            fitHelpText.textContent =
-              'Fits 100% of your image inside the target frame, adding white padding on top & bottom (or sides if image is extra tall).';
-          }
-
-          renderCanvas();
-        });
-      });
-
-      // Inset Margin Slider
-      insetSlider.addEventListener('input', (e) => {
-        state.insetPercent = parseInt(e.target.value, 10) || 0;
+      insetSlider.addEventListener('input', () => {
+        state.insetPercent = parseInt(insetSlider.value, 10) || 0;
         insetValueLabel.textContent = `${state.insetPercent}%`;
         renderCanvas();
       });
 
-      // Color Presets & Custom Picker
-      function updateActiveColorSwatch(selectedHex) {
-        colorPresets.forEach((btn) => {
-          const isMatch = btn.dataset.color.toUpperCase() === selectedHex.toUpperCase();
-          btn.classList.toggle('border-2', isMatch);
-          btn.classList.toggle('border-pinterest', isMatch);
-          btn.classList.toggle('border', !isMatch);
-          btn.classList.toggle('border-slate-300', !isMatch);
-        });
-      }
+      colorPresets.forEach((btn) => btn.addEventListener('click', () => {
+        state.padColor = btn.dataset.color;
+        customColorInput.value = state.padColor;
+        updateActiveColorSwatch(state.padColor);
+        renderCanvas();
+      }));
 
-      colorPresets.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          state.padColor = btn.dataset.color;
-          customColorInput.value = state.padColor;
-          updateActiveColorSwatch(state.padColor);
-          renderCanvas();
-        });
-      });
-
-      customColorInput.addEventListener('input', (e) => {
-        state.padColor = e.target.value;
+      customColorInput.addEventListener('input', () => {
+        state.padColor = customColorInput.value;
         updateActiveColorSwatch(state.padColor);
         renderCanvas();
       });
 
-      // Export Resolution & Format Selectors
-      resolutionSelect.addEventListener('change', (e) => {
-        state.resolutionMode = e.target.value;
+      resolutionSelect.addEventListener('change', () => {
+        state.resolutionMode = resolutionSelect.value;
         renderCanvas();
       });
 
-      formatSelect.addEventListener('change', (e) => {
-        state.format = e.target.value;
-        renderCanvas();
+      formatSelect.addEventListener('change', () => {
+        state.format = formatSelect.value;
       });
 
-      // Download Buttons
+      // ---------- Reset ----------
+      function resetPinFrame() {
+        Object.assign(state, DEFAULTS, { image: null, fileName: 'pinterest-pin' });
+        fileInput.value = '';
+        ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+        previewWrapper.classList.add('hidden');
+        previewWrapper.classList.remove('flex');
+        emptyState.classList.remove('hidden');
+        newUploadBtn.classList.add('hidden');
+        newUploadBtn.classList.remove('inline-flex');
+        headerDownloadBtn.disabled = true;
+        mainDownloadBtn.disabled = true;
+        downloadBtnText.textContent = 'Upload an Image First';
+
+        updateRatioButtonsUI(DEFAULTS.aspectRatio);
+        updateFitButtonsUI(DEFAULTS.fitMode);
+        insetSlider.value = DEFAULTS.insetPercent;
+        insetValueLabel.textContent = '0%';
+        customColorInput.value = DEFAULTS.padColor;
+        updateActiveColorSwatch(DEFAULTS.padColor);
+        resolutionSelect.value = DEFAULTS.resolutionMode;
+        formatSelect.value = DEFAULTS.format;
+        renderCanvas();
+        badgePaddingInfo.textContent = 'Top & Bottom Padded';
+
+        toast('PinFrame reset to defaults');
+      }
+
       headerDownloadBtn.addEventListener('click', downloadPaddedImage);
       mainDownloadBtn.addEventListener('click', downloadPaddedImage);
+      headerResetBtn.addEventListener('click', resetPinFrame);
+      panelResetBtn.addEventListener('click', resetPinFrame);
     })();
   </script>
 </body>
