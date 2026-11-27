@@ -179,17 +179,19 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
 
     #tab1Container .link-box {
-      flex: 1;
-      min-width: 200px;
+      flex: 1 1 0;
+      min-width: 0;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
       background-color: #f8f9fa;
       padding: 12px;
       border: 1px solid #e0e0e0;
       border-radius: 6px;
-      word-break: break-all;
       font-family: monospace;
       font-size: 13px;
       color: #333;
@@ -225,6 +227,23 @@
       width: 18px;
       height: 18px;
       fill: currentColor;
+    }
+
+    /* Narrow phones: tighter icons so the URL field keeps more room */
+    @media (max-width: 480px) {
+      #tab1Container .output-wrapper {
+        gap: 4px;
+      }
+
+      #tab1Container .output-wrapper .link-box {
+        height: 40px;
+        padding: 11px 8px;
+      }
+
+      #tab1Container .output-wrapper .action-icon-btn {
+        width: 34px;
+        padding: 0;
+      }
     }
 
     /* Fixed Bottom-Right Reset Button (Only visible when Tab 1 is active) */
